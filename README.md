@@ -1,4 +1,4 @@
-# Solistic Health — FRUZAQLA Content Generator
+# Solstice Health — FRUZAQLA Content Generator
 
 A proof-of-concept system enabling pharmaceutical marketers to generate FDA-compliant promotional content for **FRUZAQLA** (fruquintinib) through a conversational interface powered by **Anthropic Claude**.
 

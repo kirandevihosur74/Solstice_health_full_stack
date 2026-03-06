@@ -151,8 +151,10 @@ export default function PreviewPage() {
   async function handleComplianceReview() {
     if (!sessionId || selectedIds.size === 0) return;
     console.log("[Preview] Running compliance review — %d claims", selectedIds.size);
+    setReview(null);
     setLoading("compliance");
     try {
+      await new Promise((r) => setTimeout(r, 1200));
       const result = await runComplianceReview(sessionId, [...selectedIds]);
       console.log("[Preview] Compliance result: %s, can_export=%s", result.overall, result.can_export);
       setReview(result);
@@ -165,6 +167,7 @@ export default function PreviewPage() {
     console.log("[Preview] Generating HTML — %d claims, %d assets", selectedIds.size, selectedAssetIds.length);
     setLoading("generate");
     try {
+      await new Promise((r) => setTimeout(r, 1200));
       const { html: h, revision_number } = await generateHtml(
         sessionId,
         [...selectedIds],
@@ -187,6 +190,7 @@ export default function PreviewPage() {
     console.log("[Preview] Applying edit: '%s' to rev %d (%d chars)", editInstruction, revision, html.length);
     setLoading("edit");
     try {
+      await new Promise((r) => setTimeout(r, 1200));
       const { html: h, revision_number } = await editHtml(sessionId, html, editInstruction);
       console.log("[Preview] Edit result: rev %d, %d chars (delta %+d)", revision_number, h.length, h.length - html.length);
       setHtml(h);
@@ -396,21 +400,36 @@ export default function PreviewPage() {
           <button onClick={handleComplianceReview}
             disabled={selectedIds.size === 0 || loading === "compliance"}
             className="border border-primary text-primary px-4 py-2 rounded-lg text-sm font-medium
-                       hover:bg-[#f0f4ff] transition-colors disabled:opacity-40 cursor-pointer">
+                       hover:bg-[#f0f4ff] transition-colors disabled:opacity-40 cursor-pointer
+                       inline-flex items-center gap-2">
+            {loading === "compliance" && (
+              <span className="inline-block w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            )}
             {loading === "compliance" ? "Reviewing…" : "Compliance Review"}
           </button>
           <button onClick={handleGenerate}
             disabled={selectedIds.size === 0 || loading === "generate"}
             className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-medium
-                       hover:bg-primary-light transition-colors disabled:opacity-40 cursor-pointer">
+                       hover:bg-primary-light transition-colors disabled:opacity-40 cursor-pointer
+                       inline-flex items-center gap-2">
+            {loading === "generate" && (
+              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            )}
             {loading === "generate" ? "Generating…" : "Generate Content"}
           </button>
         </div>
       </section>
 
       {/* Compliance Review Panel */}
-      {review && (
-        <section className={`border rounded-lg p-5 ${STATUS_BG[review.overall]}`}>
+      {(review || loading === "compliance") && (
+        <section className={`border rounded-lg p-5 ${loading === "compliance" ? "bg-slate-50 border-slate-200" : STATUS_BG[review!.overall]}`}>
+          {loading === "compliance" ? (
+            <div className="flex items-center gap-3 py-4">
+              <span className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-muted font-medium">Running compliance review…</span>
+            </div>
+          ) : (
+            <>
           <div className="flex items-center justify-between mb-3">
             <h2 className={`font-semibold text-sm uppercase tracking-wide ${STATUS_TEXT[review.overall]}`}>
               Compliance Review — {review.overall === "pass" ? "All Checks Passed" :
@@ -447,6 +466,8 @@ export default function PreviewPage() {
               </button>
               <span className="text-xs text-green-700">Includes HTML, metadata, compliance report &amp; asset manifest</span>
             </div>
+          )}
+            </>
           )}
         </section>
       )}
@@ -547,7 +568,11 @@ export default function PreviewPage() {
             <button onClick={handleEdit}
               disabled={!editInstruction.trim() || loading === "edit"}
               className="bg-accent text-white px-5 py-2 rounded-lg text-sm font-medium
-                         hover:opacity-90 transition-opacity disabled:opacity-40 cursor-pointer">
+                         hover:opacity-90 transition-opacity disabled:opacity-40 cursor-pointer
+                         inline-flex items-center gap-2">
+              {loading === "edit" && (
+                <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
               {loading === "edit" ? "Applying…" : "Apply Revision"}
             </button>
           </div>

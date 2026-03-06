@@ -117,17 +117,21 @@ def extract_claims_via_llm(pdf_text: str, source_name: str) -> list[dict]:
     prompt = f"""Extract prior approved pharmaceutical claims from this FDA prescribing information text.
 Source document: {source_name}
 
+IMPORTANT: Include efficacy claims from:
+- Section 14.1 (Clinical Studies — Metastatic Colorectal Cancer): OS, PFS, hazard ratios, p-values from FRESCO-2 and FRESCO trials
+- Table 7 (Efficacy Results): median OS months, median PFS, HR, p-values, DCR, ORR
+
 For each discrete claim (efficacy, safety, indication, dosing, mechanism, quality_of_life), output a JSON object with:
 - text: exact claim text as it appears (do not paraphrase)
-- citation: source reference (e.g., "FRUZAQLA Prescribing Information, Section X")
+- citation: source reference (e.g., "FRUZAQLA Prescribing Information, Section 14.1" or "Table 7")
 - category: one of efficacy, safety, indication, dosing, mechanism, quality_of_life
 - approved_date: if mentioned, else null
 
 Output a JSON array of objects. No other text. Example:
-[{{"text": "...", "citation": "...", "category": "efficacy", "approved_date": "2023-11-08"}}]
+[{{"text": "FRUZAQLA + BSC improved OS vs placebo + BSC (median 7.4 vs 4.8 months; HR 0.66, P<0.001).", "citation": "FRUZAQLA Prescribing Information, Section 14.1", "category": "efficacy", "approved_date": null}}]
 
 TEXT TO ANALYZE:
-{pdf_text[:12000]}
+{pdf_text[:40000]}
 """
 
     try:

@@ -342,6 +342,15 @@ export async function getVersions(sessionId: string) {
   return result;
 }
 
+export async function clearVersions(sessionId: string) {
+  log("clearVersions", `session_id=${sessionId}`);
+  const result = await request<{ deleted: number }>(`/versions?session_id=${sessionId}`, {
+    method: "DELETE",
+  });
+  log("clearVersions", `Deleted ${result.deleted} versions`);
+  return result;
+}
+
 export async function getVersion(versionId: string) {
   log("version", `Loading version_id=${versionId}`);
   const result = await request<VersionDetail>(`/versions/${versionId}`);

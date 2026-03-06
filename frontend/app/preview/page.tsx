@@ -10,6 +10,7 @@ import {
   editHtml,
   getVersions,
   getVersion,
+  clearVersions,
   runComplianceReview,
   exportContent,
   API_BASE,
@@ -30,7 +31,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_ORDER = ["indication", "efficacy", "mechanism", "dosing", "quality_of_life", "safety"];
 const SOURCE_LABELS: Record<string, string> = {
   clinical_literature: "Clinical Literature",
-  prior_approved: "Prior Approved",
+  prior_approved: "Source",
 };
 
 function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
@@ -71,7 +72,7 @@ export default function PreviewPage() {
   const [versions, setVersions] = useState<VersionItem[]>([]);
   const [loading, setLoading] = useState("");
   const [review, setReview] = useState<ComplianceReviewResult | null>(null);
-  const [showSource, setShowSource] = useState(true);
+  const [showSource, setShowSource] = useState(false);
   const [iframeHeight, setIframeHeight] = useState<number | null>(null);
   const [bannerZoom, setBannerZoom] = useState(100);
 
@@ -217,6 +218,22 @@ export default function PreviewPage() {
       setHtml(v.html);
       setRevision(v.revision_number);
     } catch (err) { console.error("[Preview] Load version failed:", err); }
+    finally { setLoading(""); }
+  }
+
+  async function handleClearPreview() {
+    if (!sessionId) return;
+    console.log("[Preview] Clearing preview and version history");
+    setLoading("clear");
+    try {
+      await clearVersions(sessionId);
+      setHtml("");
+      setRevision(0);
+      setReview(null);
+      setVersions([]);
+      setEditInstruction("");
+      console.log("[Preview] Preview cleared");
+    } catch (err) { console.error("[Preview] Clear preview failed:", err); }
     finally { setLoading(""); }
   }
 
@@ -596,9 +613,18 @@ export default function PreviewPage() {
 
       {/* Version History */}
       <section className="bg-surface border border-border rounded-lg p-5">
-        <h2 className="font-semibold text-sm uppercase tracking-wide text-muted mb-3">
-          Version History
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-sm uppercase tracking-wide text-muted">
+            Version History
+          </h2>
+          <button
+            onClick={handleClearPreview}
+            disabled={loading === "clear"}
+            className="text-sm text-amber-600 hover:text-amber-700 hover:underline cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {loading === "clear" ? "Clearing…" : "Clear Versions"}
+          </button>
+        </div>
         {versions.length === 0 ? (
           <p className="text-sm text-muted">No versions yet. Generate content to create your first version.</p>
         ) : (
